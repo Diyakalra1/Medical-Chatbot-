@@ -2,4 +2,5 @@ ctransformers
 sentence-transformers
 pinecone-client
 langchain
+langchain-community
 flask
