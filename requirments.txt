@@ -4,3 +4,7 @@ pinecone
 langchain
 langchain-community
 flask
+python-dotenv
+pypdf
+langchain_huggingface
+langchain-pinecone
