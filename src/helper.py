@@ -1,5 +1,6 @@
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
-
+from sentence_transformers import SentenceTransformer
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 def load_pdf(data):
     loader = DirectoryLoader(data,
                              glob="*.pdf",
@@ -13,3 +14,10 @@ def text_split(extracted_data):
   splitter=RecursiveCharacterTextSplitter(chunk_size=500,chunk_overlap=20)
   text_chunks=splitter.split_documents(extracted_data)
   return text_chunks
+
+
+def download_huggingface_embeddings():
+  
+  model_ = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+  
+  print(model_)
