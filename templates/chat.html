@@ -7,38 +7,44 @@
 </head>
 <body>
     <div class="chat-container">
-        <div class="chat-header">Welcome to Medical Chatbot</div>
-        <div class="chat-box" id="chat-box"></div>
+        <div class="chat-header">
+            <img src="https://static.vecteezy.com/system/resources/previews/021/658/602/non_2x/3d-medical-sign-symbol-concept-icon-free-png.png" class="icon">
+            <h2>Ask your Medical Assistant</h2>
+        </div>
+        <div id="chatbox" class="chat-box">
+            <p class="bot-text"><span>Hello! How can I help you today?</span></p>
+        </div>
         <form id="chat-form">
-            <input type="text" id="user-input" placeholder="Type your symptoms..." autocomplete="off">
+            <input id="textInput" type="text" name="msg" placeholder="Type your message..." autocomplete="off"/>
             <button type="submit">Send</button>
         </form>
     </div>
 
     <script>
-        const form = document.getElementById('chat-form');
-        const input = document.getElementById('user-input');
-        const chatBox = document.getElementById('chat-box');
+        const form = document.getElementById("chat-form");
+        const input = document.getElementById("textInput");
+        const chatbox = document.getElementById("chatbox");
 
-        form.addEventListener('submit', async (e) => {
+        form.onsubmit = async (e) => {
             e.preventDefault();
-            const userMessage = input.value.trim();
-            if (!userMessage) return;
+            const userMsg = input.value.trim();
+            if (!userMsg) return;
 
-            chatBox.innerHTML += `<div class="message user">${userMessage}</div>`;
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
+            const userHtml = `<p class="user-text"><span>${userMsg}</span></p>`;
+            chatbox.innerHTML += userHtml;
+            input.value = "";
 
-            const res = await fetch('/get', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMessage })
+            const res = await fetch("/get", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `msg=${encodeURIComponent(userMsg)}`
             });
 
-            const data = await res.json();
-            chatBox.innerHTML += `<div class="message bot">${data.reply}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
+            const botMsg = await res.text();
+            const botHtml = `<p class="bot-text"><span>${botMsg}</span></p>`;
+            chatbox.innerHTML += botHtml;
+            chatbox.scrollTop = chatbox.scrollHeight;
+        };
     </script>
 </body>
 </html>
