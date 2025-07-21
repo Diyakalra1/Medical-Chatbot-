@@ -1,5 +1,6 @@
-from langchain.document_loaders import DirectoryLoader, PyPDFLoader
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 from sentence_transformers import SentenceTransformer
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 def load_pdf(data):
     loader = DirectoryLoader(data,
@@ -20,4 +21,5 @@ def download_huggingface_embeddings():
   
   model_ = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
   
-  print(model_)
+  embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+  return embedding
