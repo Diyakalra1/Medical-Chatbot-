@@ -15,7 +15,7 @@ def text_split(extracted_data):
   text_chunks=splitter.split_documents(extracted_data)
   return text_chunks
 
-
+#download the hugging face package
 def download_huggingface_embeddings():
   
   model_ = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
