@@ -9,3 +9,4 @@ pypdf
 langchain_huggingface
 langchain-pinecone
 -e . 
+gunicorn
