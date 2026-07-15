@@ -1,14 +1,37 @@
+print("START: app.py", flush=True)
+
+print("IMPORT: flask", flush=True)
 from flask import Flask, render_template, request, jsonify
+
+print("IMPORT: dotenv", flush=True)
 from dotenv import load_dotenv
+
+print("IMPORT: google genai", flush=True)
 from google import genai
+
+print("IMPORT: langchain pinecone", flush=True)
 from langchain_pinecone import PineconeVectorStore
+
+print("IMPORT: pinecone", flush=True)
 from pinecone import Pinecone
 
+print("IMPORT: helper", flush=True)
 from src.helper import download_huggingface_embeddings
+
+print("IMPORT: context evaluator", flush=True)
 from src.retrieval.context_evaluator import ContextEvaluator
+
+print("IMPORT: reranker", flush=True)
 from src.retrieval.reranker import MedicalReranker
+
+print("IMPORT: retriever", flush=True)
 from src.retrieval.retriever import MedicalRetriever
+
+print("IMPORT: router", flush=True)
 from src.query.query_router import QueryRouter, QueryIntent
+
+print("ALL IMPORTS COMPLETE", flush=True)
+
 
 import os
 import threading
