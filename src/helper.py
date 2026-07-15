@@ -1,7 +1,7 @@
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 from sentence_transformers import SentenceTransformer
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 def load_pdf(data):
     loader = DirectoryLoader(data,
                              glob="*.pdf",

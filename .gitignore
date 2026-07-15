@@ -5,7 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+*.pyc
 # Distribution / packaging
 .Python
 build/
@@ -201,4 +201,11 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+/med
 Model/llama-2-7b-chat.Q3_K_S.gguf
+
+.env
+__pycache__/
+*.pyc
+venv/
+med/

@@ -1,50 +1,977 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Medical Chatbot</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MedAssist | Medical Evidence Copilot</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 </head>
+
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <img src="https://static.vecteezy.com/system/resources/previews/021/658/602/non_2x/3d-medical-sign-symbol-concept-icon-free-png.png" class="icon">
-            <h2>Ask your Medical Assistant</h2>
+
+    <div id="startup-loader" class="startup-loader">
+
+        <img
+            src="{{ url_for('static', filename='images/medassist-logo.png') }}"
+            alt="MedAssist"
+        >
+
+        <h1>MedAssist</h1>
+
+        <p>
+            Preparing your medical evidence copilot
+        </p>
+
+        <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
-        <div id="chatbox" class="chat-box">
-            <p class="bot-text"><span>Hello! How can I help you today?</span></p>
-        </div>
-        <form id="chat-form">
-            <input id="textInput" type="text" name="msg" placeholder="Type your message..." autocomplete="off"/>
-            <button type="submit">Send</button>
-        </form>
+
     </div>
 
+
+    <main class="app">
+
+        <header class="navbar">
+
+            <div class="brand">
+
+                <img
+                    src="{{ url_for('static', filename='images/medassist-logo.png') }}"
+                    alt="MedAssist"
+                >
+
+                <div>
+                    <h2>MedAssist</h2>
+                    <p>Medical Evidence Copilot</p>
+                </div>
+
+            </div>
+
+
+            <button
+                class="about-button"
+                id="about-button"
+            >
+                About MedAssist
+            </button>
+
+        </header>
+
+
+        <section class="chat-section">
+
+            <div
+                id="chatbox"
+                class="chat-box"
+            >
+
+                <div class="welcome">
+
+                    <img
+                        src="{{ url_for('static', filename='images/medassist-logo.png') }}"
+                        alt="MedAssist"
+                    >
+
+                    <h1>
+                        Your medical evidence copilot.
+                    </h1>
+
+                    <p>
+                        Ask about a medical condition,
+                        symptoms, causes or general
+                        health information.
+                    </p>
+
+
+                    <div class="suggestions">
+
+                        <button>
+                            What is diabetes?
+                        </button>
+
+                        <button>
+                            What causes asthma?
+                        </button>
+
+                        <button>
+                            What are symptoms of anemia?
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="pipeline"
+                class="pipeline hidden"
+            >
+
+                <span class="pipeline-dot"></span>
+
+                <span id="pipeline-text">
+                    Reviewing medical evidence
+                </span>
+
+            </div>
+
+
+            <form id="chat-form">
+
+                <div class="input-container">
+
+                    <input
+                        id="textInput"
+                        type="text"
+                        name="msg"
+                        placeholder="Ask a medical question..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        type="submit"
+                        id="send-button"
+                    >
+                        ↑
+                    </button>
+
+                </div>
+
+
+                <p class="disclaimer">
+                    MedAssist provides general health
+                    information and does not replace
+                    professional medical care.
+                </p>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+
+    <div
+        id="about-modal"
+        class="modal hidden"
+    >
+
+        <div class="modal-card">
+
+            <button
+                id="close-modal"
+                class="close-button"
+            >
+                ×
+            </button>
+
+
+            <img
+                src="{{ url_for('static', filename='images/medassist-logo.png') }}"
+                alt="MedAssist"
+            >
+
+
+            <h2>
+                About MedAssist
+            </h2>
+
+
+            <p class="modal-intro">
+
+                MedAssist is a medical evidence
+                copilot designed to provide grounded
+                health information.
+
+            </p>
+
+
+            <div class="about-grid">
+
+                <div>
+
+                    <h3>
+                        What it is
+                    </h3>
+
+                    <p>
+
+                        An evidence-grounded system
+                        that retrieves, reranks and
+                        validates medical knowledge
+                        before generating a response.
+
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <h3>
+                        What it is not
+                    </h3>
+
+                    <p>
+
+                        A doctor, diagnostic system
+                        or replacement for professional
+                        medical care.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="architecture">
+
+                Retrieval
+
+                <span>→</span>
+
+                Reranking
+
+                <span>→</span>
+
+                Evidence Gate
+
+                <span>→</span>
+
+                Grounded Response
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
     <script>
-        const form = document.getElementById("chat-form");
-        const input = document.getElementById("textInput");
-        const chatbox = document.getElementById("chatbox");
 
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const userMsg = input.value.trim();
-            if (!userMsg) return;
+        const form =
+            document.getElementById("chat-form");
 
-            const userHtml = `<p class="user-text"><span>${userMsg}</span></p>`;
-            chatbox.innerHTML += userHtml;
+        const input =
+            document.getElementById("textInput");
+
+        const chatbox =
+            document.getElementById("chatbox");
+
+
+        const pipeline =
+            document.getElementById("pipeline");
+
+        const pipelineText =
+            document.getElementById("pipeline-text");
+
+
+        const modal =
+            document.getElementById("about-modal");
+
+        const aboutButton =
+            document.getElementById("about-button");
+
+        const closeModal =
+            document.getElementById("close-modal");
+
+
+        const suggestions =
+            document.querySelectorAll(
+                ".suggestions button"
+            );
+
+
+
+        window.addEventListener(
+            "load",
+            () => {
+
+                setTimeout(
+                    () => {
+
+                        document
+                            .getElementById(
+                                "startup-loader"
+                            )
+                            .classList
+                            .add(
+                                "loader-hidden"
+                            );
+
+                    },
+                    1300
+                );
+
+            }
+        );
+
+
+
+        aboutButton.onclick = () => {
+
+            modal.classList.remove(
+                "hidden"
+            );
+
+        };
+
+
+
+        closeModal.onclick = () => {
+
+            modal.classList.add(
+                "hidden"
+            );
+
+        };
+
+
+
+        modal.onclick = (event) => {
+
+            if (
+                event.target === modal
+            ) {
+
+                modal.classList.add(
+                    "hidden"
+                );
+
+            }
+
+        };
+
+
+
+        suggestions.forEach(
+            button => {
+
+                button.onclick = () => {
+
+                    input.value =
+                        button.innerText;
+
+                    form.requestSubmit();
+
+                };
+
+            }
+        );
+
+
+
+        function escapeHTML(text) {
+
+            const element =
+                document.createElement(
+                    "div"
+                );
+
+            element.innerText =
+                text ?? "";
+
+            return element.innerHTML;
+
+        }
+
+
+
+        function formatBotMessage(text) {
+
+            return escapeHTML(text)
+
+                .replace(
+                    /\n/g,
+                    "<br>"
+                )
+
+                .replace(
+                    /\*\*(.*?)\*\*/g,
+                    "<strong>$1</strong>"
+                );
+
+        }
+
+
+
+        function addUserMessage(message) {
+
+            const welcome =
+                document.querySelector(
+                    ".welcome"
+                );
+
+
+            if (welcome) {
+
+                welcome.remove();
+
+            }
+
+
+            chatbox.innerHTML += `
+
+                <div
+                    class="message user-message"
+                >
+
+                    <div class="message-content">
+
+                        ${escapeHTML(message)}
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+
+
+        function addThinkingMessage() {
+
+            chatbox.innerHTML += `
+
+                <div
+                    class="message bot-message"
+                    id="thinking-message"
+                >
+
+                    <img
+                        src="{{ url_for('static', filename='images/medassist-logo.png') }}"
+                        class="bot-icon"
+                        alt="MedAssist"
+                    >
+
+
+                    <div class="thinking">
+
+                        <span></span>
+
+                        <span></span>
+
+                        <span></span>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+
+
+        function addBotMessage(
+            message,
+            trace
+        ) {
+
+            const traceId =
+                "trace-" + Date.now();
+
+
+            let traceSection = "";
+
+
+            if (trace) {
+
+                traceSection = `
+
+                    <button
+                        class="trace-button"
+                        onclick="toggleTrace('${traceId}')"
+                    >
+
+                        ◉ View Evidence Trace
+
+                    </button>
+
+
+                    <div
+                        id="${traceId}"
+                        class="trace-card hidden"
+                    >
+
+
+                        <div class="trace-header">
+
+                            Evidence Pipeline Trace
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Query Intent
+                            </span>
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    trace.intent || "N/A"
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Pipeline Path
+                            </span>
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    trace.pipeline_path || "N/A"
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Routing
+                            </span>
+
+                            <strong>
+
+                                ${trace.routing_ms ?? "N/A"} ms
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Documents Retrieved
+                            </span>
+
+                            <strong>
+
+                                ${trace.documents_retrieved ?? "N/A"}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Retrieval
+                            </span>
+
+                            <strong>
+
+                                ${trace.retrieval_ms ?? "N/A"} ms
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Reranking
+                            </span>
+
+                            <strong>
+
+                                ${trace.reranking_ms ?? "N/A"} ms
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Rank Promotion
+                            </span>
+
+                            <strong>
+
+                                ${trace.top_original_rank ?? "N/A"}
+
+                                →
+
+                                ${trace.top_reranked_rank ?? "N/A"}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Evidence Score
+                            </span>
+
+                            <strong>
+
+                                ${trace.evidence_score ?? "N/A"}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Evidence Gate
+                            </span>
+
+                            <strong class="trace-decision">
+
+                                ${escapeHTML(
+                                    trace.decision || "N/A"
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Grounding Decision
+                            </span>
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    trace.grounding_decision || "N/A"
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="trace-row">
+
+                            <span>
+                                Total Evidence Latency
+                            </span>
+
+                            <strong>
+
+                                ${trace.total_evidence_latency_ms ?? "N/A"} ms
+
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+                `;
+
+            }
+
+
+            chatbox.innerHTML += `
+
+                <div
+                    class="message bot-message"
+                >
+
+                    <img
+                        src="{{ url_for('static', filename='images/medassist-logo.png') }}"
+                        class="bot-icon"
+                        alt="MedAssist"
+                    >
+
+
+                    <div class="bot-response-wrapper">
+
+
+                        <div
+                            class="message-content bot-content"
+                        >
+
+                            ${formatBotMessage(message)}
+
+                        </div>
+
+
+                        ${traceSection}
+
+
+                    </div>
+
+
+                </div>
+
+            `;
+
+        }
+
+
+
+        function toggleTrace(traceId) {
+
+            const traceCard =
+                document.getElementById(
+                    traceId
+                );
+
+
+            if (!traceCard) {
+
+                return;
+
+            }
+
+
+            traceCard
+                .classList
+                .toggle(
+                    "hidden"
+                );
+
+        }
+
+
+
+        async function updatePipeline() {
+
+            const stages = [
+
+                "Retrieving medical evidence",
+
+                "Reranking relevant sources",
+
+                "Checking evidence sufficiency",
+
+                "Preparing grounded response"
+
+            ];
+
+
+            for (
+                const stage of stages
+            ) {
+
+                pipelineText.innerText =
+                    stage;
+
+
+                await new Promise(
+
+                    resolve =>
+
+                        setTimeout(
+                            resolve,
+                            600
+                        )
+
+                );
+
+            }
+
+        }
+
+
+
+        form.onsubmit = async (event) => {
+
+            event.preventDefault();
+
+
+            const userMessage =
+                input.value.trim();
+
+
+            if (!userMessage) {
+
+                return;
+
+            }
+
+
+            addUserMessage(
+                userMessage
+            );
+
+
             input.value = "";
 
-            const res = await fetch("/get", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `msg=${encodeURIComponent(userMsg)}`
-            });
 
-            const botMsg = await res.text();
-            const botHtml = `<p class="bot-text"><span>${botMsg}</span></p>`;
-            chatbox.innerHTML += botHtml;
-            chatbox.scrollTop = chatbox.scrollHeight;
+            pipeline
+                .classList
+                .remove(
+                    "hidden"
+                );
+
+
+            addThinkingMessage();
+
+
+            chatbox.scrollTop =
+                chatbox.scrollHeight;
+
+
+            const pipelineAnimation =
+                updatePipeline();
+
+
+
+            try {
+
+
+                const response =
+                    await fetch(
+                        "/get",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded"
+
+                            },
+
+                            body:
+
+                                `msg=${encodeURIComponent(
+                                    userMessage
+                                )}`
+
+                        }
+                    );
+
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Request failed"
+                    );
+
+                }
+
+
+
+                const data =
+                    await response.json();
+
+
+
+                const botMessage =
+                    data.answer;
+
+
+                const trace =
+                    data.trace;
+
+
+
+                await pipelineAnimation;
+
+
+
+                document
+                    .getElementById(
+                        "thinking-message"
+                    )
+                    ?.remove();
+
+
+
+                pipeline
+                    .classList
+                    .add(
+                        "hidden"
+                    );
+
+
+
+                addBotMessage(
+                    botMessage,
+                    trace
+                );
+
+
+
+                chatbox.scrollTop =
+                    chatbox.scrollHeight;
+
+
+            }
+
+
+            catch (error) {
+
+
+                console.error(
+                    error
+                );
+
+
+                document
+                    .getElementById(
+                        "thinking-message"
+                    )
+                    ?.remove();
+
+
+
+                pipeline
+                    .classList
+                    .add(
+                        "hidden"
+                    );
+
+
+
+                addBotMessage(
+
+                    "MedAssist could not process the request. Please try again.",
+
+                    null
+
+                );
+
+
+            }
+
         };
+
     </script>
+
 </body>
+
 </html>

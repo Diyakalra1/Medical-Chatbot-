@@ -10,3 +10,6 @@ langchain_huggingface
 langchain-pinecone
 -e . 
 gunicorn
+
+#new one
+pip install -U sentence-transformers
