@@ -1,15 +1,16 @@
-ctransformers
-sentence-transformers
+Flask
+gunicorn
+python-dotenv
+google-genai
 pinecone
 langchain
+langchain-core
 langchain-community
-flask
-python-dotenv
-pypdf
-langchain_huggingface
 langchain-pinecone
--e . 
-gunicorn
-
-#new one
-pip install -U sentence-transformers
+langchain-huggingface
+sentence-transformers
+transformers
+huggingface-hub
+torch
+pypdf
+-e .
