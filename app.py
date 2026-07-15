@@ -11,6 +11,7 @@ from src.retrieval.retriever import MedicalRetriever
 from src.query.query_router import QueryRouter, QueryIntent
 
 import os
+import threading
 
 
 app = Flask(__name__)
@@ -27,26 +28,115 @@ if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY is missing")
 
 
-pc = Pinecone(api_key=PINECONE_API_KEY)
+MODEL_NAME = "gemini-3-flash-preview"
 
-index = pc.Index("medicalchatbot")
 
-embedding = download_huggingface_embeddings()
+medical_retriever = None
+medical_reranker = None
+context_evaluator = None
 
-vectorstore = PineconeVectorStore(
-    index=index,
-    embedding=embedding
+models_ready = False
+model_loading = False
+model_error = None
+
+model_lock = threading.Lock()
+
+
+client = genai.Client(
+    api_key=GEMINI_API_KEY
 )
-
-medical_retriever = MedicalRetriever(vectorstore)
-medical_reranker = MedicalReranker()
-context_evaluator = ContextEvaluator()
-
-client = genai.Client(api_key=GEMINI_API_KEY)
 
 query_router = QueryRouter()
 
-MODEL_NAME = "gemini-3-flash-preview"
+
+def initialize_medical_pipeline():
+
+    global medical_retriever
+    global medical_reranker
+    global context_evaluator
+
+    global models_ready
+    global model_loading
+    global model_error
+
+    with model_lock:
+
+        if models_ready or model_loading:
+            return
+
+        model_loading = True
+
+    print("\n--- MODEL INITIALIZATION ---")
+    print("Starting MedAssist pipeline warm-up...")
+
+    try:
+
+        pc = Pinecone(
+            api_key=PINECONE_API_KEY
+        )
+
+        print("Pinecone client initialized")
+
+        index = pc.Index(
+            "medicalchatbot"
+        )
+
+        print("Pinecone index connected")
+
+        embedding = (
+            download_huggingface_embeddings()
+        )
+
+        print("Embedding model loaded")
+
+        vectorstore = PineconeVectorStore(
+            index=index,
+            embedding=embedding
+        )
+
+        medical_retriever = MedicalRetriever(
+            vectorstore
+        )
+
+        print("Medical retriever initialized")
+
+        medical_reranker = MedicalReranker()
+
+        print("Medical reranker loaded")
+
+        context_evaluator = ContextEvaluator()
+
+        print("Context evaluator initialized")
+
+        models_ready = True
+        model_error = None
+
+        print(
+            "MedAssist pipeline READY"
+        )
+
+    except Exception as error:
+
+        model_error = str(error)
+
+        print(
+            "MODEL INITIALIZATION ERROR:",
+            error
+        )
+
+    finally:
+
+        model_loading = False
+
+
+def start_model_warmup():
+
+    warmup_thread = threading.Thread(
+        target=initialize_medical_pipeline,
+        daemon=True
+    )
+
+    warmup_thread.start()
 
 
 def handle_conversation(query):
@@ -264,7 +354,10 @@ def parse_grounded_response(response_text):
         grounding_decision = "INVALID_RESPONSE"
 
     print("\n--- GROUNDING TRACE ---")
-    print("Grounding Decision:", grounding_decision)
+    print(
+        "Grounding Decision:",
+        grounding_decision
+    )
 
     if grounding_decision == "INVALID_RESPONSE":
 
@@ -347,7 +440,10 @@ def retrieve_answers(query):
     base_trace = {
         "intent": route.intent.value.upper(),
         "routing_method": route.routing_method,
-        "routing_ms": round(route.routing_ms, 2),
+        "routing_ms": round(
+            route.routing_ms,
+            2
+        ),
         "routing_reason": route.reason
     }
 
@@ -370,6 +466,21 @@ def retrieve_answers(query):
                 **base_trace,
                 "pipeline_path": "HIGH_RISK",
                 "decision": "HIGH_RISK"
+            }
+        }
+
+    if not models_ready:
+
+        return {
+            "answer": (
+                "MedAssist is preparing the medical "
+                "evidence pipeline. Please try again "
+                "in a moment."
+            ),
+            "trace": {
+                **base_trace,
+                "pipeline_path": "MODEL_WARMUP",
+                "decision": "MODEL_LOADING"
             }
         }
 
@@ -586,6 +697,30 @@ def index():
     )
 
 
+@app.route("/ready")
+def ready():
+
+    if models_ready:
+
+        return jsonify({
+            "ready": True,
+            "status": "READY"
+        })
+
+    if model_error:
+
+        return jsonify({
+            "ready": False,
+            "status": "ERROR",
+            "error": model_error
+        }), 500
+
+    return jsonify({
+        "ready": False,
+        "status": "LOADING"
+    })
+
+
 @app.route(
     "/get",
     methods=["POST"]
@@ -639,6 +774,9 @@ def chat():
                 "decision": "PIPELINE_ERROR"
             }
         }), 500
+
+
+start_model_warmup()
 
 
 if __name__ == "__main__":
