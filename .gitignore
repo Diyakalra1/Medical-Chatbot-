@@ -202,7 +202,7 @@ cython_debug/
 .cursorindexingignore
 
 /med
-Model/llama-2-7b-chat.Q3_K_S.gguf
+
 
 .env
 __pycache__/
