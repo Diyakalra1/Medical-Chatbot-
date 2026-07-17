@@ -1,0 +1,37 @@
+MEDASSIST 100 QUERY BENCHMARK
+============================================================
+
+Total Queries : 100
+Decision Agreement : 78.00%
+
+Latency
+-----------------------------
+Average Retrieval : 334.53 ms
+P50 Retrieval : 359.05 ms
+P95 Retrieval : 434.87 ms
+
+Average Reranking : 173.60 ms
+P50 Reranking : 191.74 ms
+P95 Reranking : 260.91 ms
+
+Average Total Pipeline : 508.36 ms
+P50 Total Pipeline : 563.42 ms
+P95 Total Pipeline : 648.95 ms
+
+Pipeline
+-----------------------------
+LLM Calls : 48
+LLM Calls Saved : 52.00%
+Generate Rate : 48.00%
+Abstain Rate : 38.00%
+Conversation Rate : 7.00%
+High Risk Rate : 7.00%
+Promotion Rate : 56.00%
+
+Category Accuracy
+-----------------------------
+supported_medical             84.00% (42/50)
+unsupported                   100.00% (15/15)
+unsupported_medical           70.00% (7/10)
+conversation                  70.00% (7/10)
+high_risk                     46.67% (7/15)
