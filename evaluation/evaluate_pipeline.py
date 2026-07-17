@@ -643,9 +643,294 @@ def run_latency_benchmark():
         output_file
     )
 
+def run_100_query_benchmark():
+
+    results = []
+
+    correct = 0
+
+    llm_calls = 0
+
+    category_stats = {}
+
+    print("\nMEDASSIST 100 QUERY BENCHMARK")
+    print("=" * 80)
+
+    for index, test in enumerate(TEST_QUERIES, start=1):
+
+        query = test["query"]
+        category = test["category"]
+        expected = test["expected"]
+
+        result = evaluate_query(query)
+
+        actual = result["actual"]
+
+        passed = actual == expected
+
+        if passed:
+            correct += 1
+
+        if actual == "GENERATE":
+            llm_calls += 1
+
+        if category not in category_stats:
+            category_stats[category] = {
+                "correct": 0,
+                "total": 0
+            }
+
+        category_stats[category]["total"] += 1
+
+        if passed:
+            category_stats[category]["correct"] += 1
+
+        status = "PASS" if passed else "FAIL"
+
+        print(f"[{index:03}] {status} | {category} | {query}")
+
+        results.append({
+            "query": query,
+            "category": category,
+            "expected": expected,
+            "actual": actual,
+            "passed": passed,
+            "routing_ms": round(result["routing_ms"],2),
+            "retrieval_ms": round(result["retrieval_ms"],2),
+            "reranking_ms": round(result["reranking_ms"],2),
+            "total_pipeline_ms": round(result["total_pipeline_ms"],2),
+            "top_original_rank": result["top_original_rank"],
+            "max_dense_score": result["max_dense_score"],
+            "top_candidate_dense_score": result["top_candidate_dense_score"],
+            "top_reranker_score": result["top_reranker_score"],
+            "evidence_score": result["evidence_score"]
+        })
+
+    retrieval_latencies = [
+        x["retrieval_ms"]
+        for x in results
+    ]
+
+    reranking_latencies = [
+        x["reranking_ms"]
+        for x in results
+    ]
+
+    total_latencies = [
+        x["total_pipeline_ms"]
+        for x in results
+    ]
+
+    promoted = [
+        x
+        for x in results
+        if (
+            x["top_original_rank"] is not None
+            and x["top_original_rank"] > 1
+        )
+    ]
+
+    promotion_rate = (
+        len(promoted) / len(results)
+    ) * 100
+
+    agreement = (
+        correct / len(TEST_QUERIES)
+    ) * 100
+
+    pass_rate = (
+        llm_calls / len(TEST_QUERIES)
+    ) * 100
+
+    abstain_rate = (
+        len([
+            x for x in results
+            if x["actual"] == "ABSTAIN"
+        ])
+        / len(TEST_QUERIES)
+    ) * 100
+
+    conversation_rate = (
+        len([
+            x for x in results
+            if x["actual"] == "CONVERSATION"
+        ])
+        / len(TEST_QUERIES)
+    ) * 100
+
+    high_risk_rate = (
+        len([
+            x for x in results
+            if x["actual"] == "HIGH_RISK"
+        ])
+        / len(TEST_QUERIES)
+    ) * 100
+
+    llm_saved = (
+        (
+            len(TEST_QUERIES) - llm_calls
+        )
+        / len(TEST_QUERIES)
+    ) * 100
+
+    print("\n")
+    print("=" * 80)
+    print("MEDASSIST 100 QUERY REPORT")
+    print("=" * 80)
+
+    print("\nOverall")
+    print("-------------------------------")
+    print("Queries:", len(TEST_QUERIES))
+    print("Decision Agreement:", round(agreement,2), "%")
+
+    print("\nLatency")
+    print("-------------------------------")
+
+    print_latency_summary(
+        "Retrieval",
+        retrieval_latencies
+    )
+
+    print_latency_summary(
+        "Reranking",
+        reranking_latencies
+    )
+
+    print_latency_summary(
+        "Total Pipeline",
+        total_latencies
+    )
+
+    print("\nPipeline")
+    print("-------------------------------")
+    print("LLM Calls:", llm_calls)
+    print("LLM Calls Saved:", round(llm_saved,2), "%")
+    print("Generate Rate:", round(pass_rate,2), "%")
+    print("Abstain Rate:", round(abstain_rate,2), "%")
+    print("Conversation Rate:", round(conversation_rate,2), "%")
+    print("High Risk Rate:", round(high_risk_rate,2), "%")
+    print("Promotion Rate:", round(promotion_rate,2), "%")
+
+    print("\nCategory Accuracy")
+    print("-------------------------------")
+
+    for category in category_stats:
+
+        accuracy = (
+            category_stats[category]["correct"]
+            / category_stats[category]["total"]
+        ) * 100
+
+        print(
+            f"{category:30}"
+            f"{accuracy:.2f}%"
+            f" ({category_stats[category]['correct']}/{category_stats[category]['total']})"
+        )
+
+    csv_file = "evaluation/100_query_results.csv"
+
+    with open(
+        csv_file,
+        "w",
+        newline="",
+        encoding="utf-8"
+    ) as file:
+
+        writer = csv.DictWriter(
+            file,
+            fieldnames=results[0].keys()
+        )
+
+        writer.writeheader()
+        writer.writerows(results)
+
+    report_file = "evaluation/100_query_benchmark_report.txt"
+
+    with open(
+        report_file,
+        "w",
+        encoding="utf-8"
+    ) as report:
+
+        report.write("MEDASSIST 100 QUERY BENCHMARK\n")
+        report.write("=" * 60 + "\n\n")
+
+        report.write(f"Total Queries : {len(TEST_QUERIES)}\n")
+        report.write(f"Decision Agreement : {agreement:.2f}%\n\n")
+
+        report.write("Latency\n")
+        report.write("-----------------------------\n")
+
+        report.write(
+            f"Average Retrieval : {statistics.mean(retrieval_latencies):.2f} ms\n"
+        )
+
+        report.write(
+            f"P50 Retrieval : {statistics.median(retrieval_latencies):.2f} ms\n"
+        )
+
+        report.write(
+            f"P95 Retrieval : {percentile(retrieval_latencies,0.95):.2f} ms\n\n"
+        )
+
+        report.write(
+            f"Average Reranking : {statistics.mean(reranking_latencies):.2f} ms\n"
+        )
+
+        report.write(
+            f"P50 Reranking : {statistics.median(reranking_latencies):.2f} ms\n"
+        )
+
+        report.write(
+            f"P95 Reranking : {percentile(reranking_latencies,0.95):.2f} ms\n\n"
+        )
+
+        report.write(
+            f"Average Total Pipeline : {statistics.mean(total_latencies):.2f} ms\n"
+        )
+
+        report.write(
+            f"P50 Total Pipeline : {statistics.median(total_latencies):.2f} ms\n"
+        )
+
+        report.write(
+            f"P95 Total Pipeline : {percentile(total_latencies,0.95):.2f} ms\n\n"
+        )
+
+        report.write("Pipeline\n")
+        report.write("-----------------------------\n")
+        report.write(f"LLM Calls : {llm_calls}\n")
+        report.write(f"LLM Calls Saved : {llm_saved:.2f}%\n")
+        report.write(f"Generate Rate : {pass_rate:.2f}%\n")
+        report.write(f"Abstain Rate : {abstain_rate:.2f}%\n")
+        report.write(f"Conversation Rate : {conversation_rate:.2f}%\n")
+        report.write(f"High Risk Rate : {high_risk_rate:.2f}%\n")
+        report.write(f"Promotion Rate : {promotion_rate:.2f}%\n\n")
+
+        report.write("Category Accuracy\n")
+        report.write("-----------------------------\n")
+
+        for category in category_stats:
+
+            accuracy = (
+                category_stats[category]["correct"]
+                / category_stats[category]["total"]
+            ) * 100
+
+            report.write(
+                f"{category:30}"
+                f"{accuracy:.2f}% "
+                f"({category_stats[category]['correct']}/{category_stats[category]['total']})\n"
+            )
+
+    print("\nCSV Saved :", csv_file)
+    print("Report Saved :", report_file)
+
 
 if __name__ == "__main__":
 
-    run_boundary_evaluation()
+    # run_boundary_evaluation()
 
-    run_latency_benchmark()
+    # run_latency_benchmark()
+
+    run_100_query_benchmark()
