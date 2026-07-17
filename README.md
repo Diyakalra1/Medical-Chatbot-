@@ -79,6 +79,8 @@
 ### similarity metric cosine similairty
 ### Embedding model - sentence-transformers/all-MiniLM-L6-v2
 ### cross encoder used - cross-encoder/ms-marco-MiniLM-L6-v2
+## Evidence Trace 
+<img width="588" height="563" alt="image" src="https://github.com/user-attachments/assets/48a17611-a535-4ef9-bf80-6e246909d319" />
 
 ## Components 
 Query Router- specifiess three intenest conversation, high risk, medical   CONVERSATION
