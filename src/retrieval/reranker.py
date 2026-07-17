@@ -1,9 +1,7 @@
 from dataclasses import dataclass
-from typing import List
 from time import perf_counter
-
+from typing import List
 from sentence_transformers import CrossEncoder
-
 from src.retrieval.retriever import RetrievedCandidate
 
 
@@ -23,11 +21,9 @@ class RerankingResult:
 
 
 class MedicalReranker:
-
     def __init__(self):
-        self.model = CrossEncoder(
-            "cross-encoder/ms-marco-MiniLM-L6-v2"
-        )
+        # Scores how relevant each retrieved chunk is to the user's query.
+        self.model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2")
 
     def rerank(
         self,
@@ -39,50 +35,26 @@ class MedicalReranker:
         start_time = perf_counter()
 
         if not candidates:
-            return RerankingResult(
-                candidates=[],
-                reranking_ms=0.0
-            )
+            return RerankingResult([], 0.0)
 
-        query_document_pairs = [
-            (
-                query,
-                candidate.document.page_content
-            )
+        # CrossEncoder expects (query, document) pairs.
+        reranker_scores = self.model.predict([
+            (query, candidate.document.page_content)
             for candidate in candidates
+        ])
+
+        scored_candidates = [
+            (candidate, float(score))
+            for candidate, score in zip(candidates, reranker_scores)
         ]
 
-        scores = self.model.predict(
-            query_document_pairs
-        )
-
-        scored_candidates = []
-
-        for candidate, score in zip(
-            candidates,
-            scores
-        ):
-            scored_candidates.append(
-                (
-                    candidate,
-                    float(score)
-                )
-            )
-
-        scored_candidates.sort(
-            key=lambda item: item[1],
-            reverse=True
-        )
-
-        selected_candidates = scored_candidates[:top_n]
+        # Sort by reranker score (highest first).
+        scored_candidates.sort(key=lambda item: item[1], reverse=True)
 
         reranked_candidates = []
 
-        for reranked_rank, (
-            candidate,
-            reranker_score
-        ) in enumerate(
-            selected_candidates,
+        for reranked_rank, (candidate, reranker_score) in enumerate(
+            scored_candidates[:top_n],
             start=1
         ):
             reranked_candidates.append(
@@ -95,9 +67,7 @@ class MedicalReranker:
                 )
             )
 
-        reranking_ms = (
-            perf_counter() - start_time
-        ) * 1000
+        reranking_ms = (perf_counter() - start_time) * 1000
 
         return RerankingResult(
             candidates=reranked_candidates,

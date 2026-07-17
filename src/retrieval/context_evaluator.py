@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List
-
 from src.retrieval.reranker import RerankedCandidate
 
 
@@ -13,7 +12,6 @@ class ContextEvaluationResult:
 
 
 class ContextEvaluator:
-
     def __init__(
         self,
         dense_threshold: float = 0.50,
@@ -31,65 +29,33 @@ class ContextEvaluator:
 
         if not candidates:
             return ContextEvaluationResult(
-                selected_candidates=[],
-                evidence_score=0.0,
-                should_generate=False,
-                decision_reason="No reranked evidence available"
+                [], 0.0, False, "No reranked evidence available"
             )
 
         top_candidate = candidates[0]
-
-        top_retrieval_score = top_candidate.retrieval_score
-        top_reranker_score = top_candidate.reranker_score
-
-        strong_reranker_evidence = (
-            top_reranker_score >= self.reranker_threshold
-        )
-
-        strong_hybrid_evidence = (
-            top_retrieval_score >= self.dense_threshold
-            and
-            top_reranker_score >= self.hybrid_reranker_threshold
-        )
-
-        should_generate = (
-            strong_reranker_evidence
-            or
-            strong_hybrid_evidence
-        )
+        strong_reranker_evidence = ( top_candidate.reranker_score >= self.reranker_threshold)
+        strong_hybrid_evidence = (top_candidate.retrieval_score >= self.dense_threshold and top_candidate.reranker_score >= self.hybrid_reranker_threshold)
+        should_generate = (strong_reranker_evidence or strong_hybrid_evidence)
 
         if strong_reranker_evidence:
-            evidence_score = top_reranker_score
-
-            decision_reason = (
-                "Strong cross-encoder relevance evidence"
-            )
+            evidence_score = top_candidate.reranker_score
+            decision_reason = "Strong cross-encoder relevance evidence"
 
         elif strong_hybrid_evidence:
-            evidence_score = top_retrieval_score
-
+            evidence_score = top_candidate.retrieval_score
             decision_reason = (
-                "Dense retrieval and reranker jointly passed "
-                "hybrid evidence thresholds"
+                "Dense retrieval and reranker jointly passed hybrid evidence thresholds"
             )
 
         else:
             evidence_score = 0.0
-
             decision_reason = (
-                "Retrieved evidence was insufficient for "
-                "grounded generation"
+                "Retrieved evidence was insufficient for grounded generation"
             )
 
-        selected_candidates = (
-            candidates
-            if should_generate
-            else []
-        )
-
         return ContextEvaluationResult(
-            selected_candidates=selected_candidates,
-            evidence_score=evidence_score,
-            should_generate=should_generate,
-            decision_reason=decision_reason
+            candidates if should_generate else [],
+            evidence_score,
+            should_generate,
+            decision_reason
         )
