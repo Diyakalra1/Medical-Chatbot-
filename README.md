@@ -1,54 +1,89 @@
 ##  Architecture
 
-
-
+### One time process 
 ```text
-                           User Question
+                          Medical PDF
+                              │
+                              ▼
+                           Load PDF
+                              │
+                              ▼
+                        Split into Chunks
+                        (chunk_size = 500,
+                        chunk_overlap = 20)
+                              │
+                              ▼
+                        Generate Embeddings
+                        (HuggingFace)
+                              │
+                              ▼
+                        Store in Pinecone Index
+                        (Index: medicalchatbot)
+
+```
+```text
+                           User Query
                                  │
                                  ▼
                       ┌─────────────────────┐
-                      │    Query Router     │
+                      │    Query Router     |
+                      |                     |
                       └──────────┬──────────┘
                                  │
          ┌───────────────────────┼────────────────────────┐
-         │                       │                        │
-         ▼                       ▼                        ▼
-  Conversation Route      High-Risk Route         Medical Pipeline
-                                                        │
-                                                        ▼
-                                          ┌────────────────────────┐
-                                          │ Retrieve Top-10 Chunks │
-                                          └──────────┬─────────────┘
-                                                     │
-                                                     ▼
-                                         ┌──────────────────────────┐
-                                         │ CrossEncoder Reranker    │
-                                         │ Select Top-3 Evidence    │
-                                         └──────────┬───────────────┘
-                                                    │
-                                                    ▼
-                                         ┌──────────────────────────┐
-                                         │  Evidence Evaluation     │
-                                         │ Is the context enough?   │
-                                         └───────┬─────────┬────────┘
-                                                 │         │
-                                       No        │         │ Yes
-                                                 │         │
-                                                 ▼         ▼
-                                      Safe Abstention   Model (gemini-3-flash-preview)
-                                                        Generation
-                                                              │
-                                                              ▼
-                                            Final Response + Evidence Trace
-                                                        Generation
-                                                              │
-                                                              ▼
-                                            Final Response + Evidence Trace
+     (if conversation        (if high Risk              ( else )             
+       pattern match)         patter match)               |
+          |                       |                       |
+          ▼                       ▼                       ▼
+  Conversation Route      High-Risk Route          Medical Pipeline
+          │______________________|                        │
+                      |                                   |
+                      ▼                                   ▼ 
+       ( Direct Response, LLM call saved )           ┌────────────────────────────┐
+                      |                               │ Retrieve Top-10 Chunks     |
+                      |                               │      (From Vector DB)      |
+                      |                               | (Based on similairty score)|
+                      |                               └──────────┬─────────────────┘
+                      |                                          │
+                      |                                          ▼
+                      |                   ┌──────────────────────────────────┐
+                      |                   │     CrossEncoder Reranker        │
+                      |                   │   Select Top-3 Relevant chunks   |
+                      |                   │(Query, Document)-> Relevant Score|
+                      |                   └──────────────┬───────────────────┘
+                      |                                  │
+                      |                                  ▼
+                      |                   ┌──────────────────────────┐
+                      |                   │  Context  Evaluator      │
+                      |                   │ Is the context enough?   │
+                      |                   └───────┬─────────┬────────┘
+                      |                           │         │
+                      |                 No        │         │ Yes
+                      |                           │         │______________
+                      |                           ▼                        |
+                      |                                                    ▼
+                      |                Safe Abstention            Model (gemini-3-flash-preview)
+                      |                           |                       Generation
+                      |                           ▼                          │
+                      |                  ( Direct Response                   |
+                      |                 , LLM call saved )                   |
+                      |                            |_________________________|
+                      |                                        │
+                      |                                        ▼
+                      |----------------------------->  Final Response + Evidence Trace
 ```
+## Technology used & other specifications
+### Knowledge Base -  The Gale Encyclopedia of Medicine (Second Edition) -637 pages 
+### Gemini Model - gemini-3-flash-preview
+### Vector DataBase - PineCone 
+### similarity metric cosine similairty
+### Embedding model - sentence-transformers/all-MiniLM-L6-v2
+### cross encoder used - cross-encoder/ms-marco-MiniLM-L6-v2
 
-
+## Components 
+Query Router- specifiess three intenest conversation, high risk, medical   CONVERSATION
+MEDICAL
+HIGH_RISK
 ##  YouTube Demo
-
-
 
  **Demo Video:** https://youtu.be/1YD7Zs4BcCA
