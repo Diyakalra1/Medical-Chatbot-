@@ -1,17 +1,6 @@
 from src.query.query_router import QueryIntent
 
-def retrieve_answers(
-    query,
-    query_router,
-    medical_retriever,
-    medical_reranker,
-    context_evaluator,
-    models_ready,
-    handle_conversation,
-    build_high_risk_response,
-    generate_answer,
-    client,
-    model_name,
+def retrieve_answers(query, query_router,  medical_retriever,  medical_reranker,  context_evaluator,  models_ready,  handle_conversation,  build_high_risk_response,  generate_answer,  client,  model_name,
 ):
     route = query_router.route(query)
 
