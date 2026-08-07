@@ -1,5 +1,5 @@
 ## MedAssist-Medical information copilot
-Ask any sort of Medical stuff, gives grounded responses along with trace, no fluff, no hallucinations
+Evidence Aware Medical infomaation co-pilot built to provide grounded Meical information.
 <img width="1727" height="872" alt="image" src="https://github.com/user-attachments/assets/643ca472-b7f3-4d86-98af-da9021e43c7c" />
 ## Evidence Trace 
 <img width="588" height="563" alt="image" src="https://github.com/user-attachments/assets/48a17611-a535-4ef9-bf80-6e246909d319" />
