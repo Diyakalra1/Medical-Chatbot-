@@ -17,9 +17,9 @@ from src.retrieval.reranker import MedicalReranker
 from src.retrieval.retriever import MedicalRetriever
 
 
-app = Flask(__name__)
+app = Flask(__name__) # flask app created
 
-load_dotenv()
+load_dotenv() # Environment Variables loaded
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -31,7 +31,7 @@ if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY is missing")
 
 MODEL_NAME = "gemini-3-flash-preview"
-
+# Global Variables created 
 medical_retriever = None
 medical_reranker = None
 context_evaluator = None
@@ -42,6 +42,8 @@ model_error = None
 
 model_lock = threading.Lock()
 
+
+# Lightweight objects are loaded
 client = genai.Client(api_key=GEMINI_API_KEY)
 query_router = QueryRouter()
 
@@ -104,6 +106,13 @@ services. Do not rely on MedAssist for urgent medical situations.
 If possible, ask someone nearby for assistance and seek professional
 medical care immediately.
 """
+
+## Routes are Registered
+# / → index()
+
+# /ready → ready()
+
+# /get → chat()
 
 
 @app.route("/")
@@ -175,12 +184,12 @@ def chat():
             }
         }), 500
 
-
-start_model_warmup()
+# Before running the app 
+start_model_warmup() ## Creates a background thread to initlaise the medical pipeline
 
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
-
+#chat.html is rendered after the server starts, while the pipeline may still be loading in the background.
 # Debug = True is used to get detialed stack traces and debug support during the development
 # use_reloader is set false to ensure ML pipeline is initialised only once, the reloader may start background threads for reloading the embeddings re ranker models which could lead to heavy memeory usage and intialisation of the ML pipleline twice 
