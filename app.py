@@ -57,31 +57,46 @@ def initialize_medical_pipeline():
     with model_lock:
         if models_ready or model_loading:
             return
-
         model_loading = True
 
-    print("\n--- MODEL INITIALIZATION ---")
-    print("Starting MedAssist pipeline warm-up...")
+    print("\n=== MODEL INITIALIZATION STARTED ===", flush=True)
 
     try:
+        print("[1/6] Connecting to Pinecone...", flush=True)
         pc = Pinecone(api_key=PINECONE_API_KEY)
 
+        print("[2/6] Opening index 'medicalchatbot'...", flush=True)
         index = pc.Index("medicalchatbot")
-        embedding = download_huggingface_embeddings()
-        vectorstore = PineconeVectorStore(index=index, embedding=embedding)
 
+        print("[3/6] Loading embedding model...", flush=True)
+        embedding = download_huggingface_embeddings()
+        print("Embedding model loaded", flush=True)
+
+        print("[4/6] Creating vector store...", flush=True)
+        vectorstore = PineconeVectorStore(
+            index=index,
+            embedding=embedding,
+        )
+
+        print("[5/6] Initializing retriever...", flush=True)
         medical_retriever = MedicalRetriever(vectorstore)
+
+        print("[6/6] Loading reranker model...", flush=True)
         medical_reranker = MedicalReranker()
+        print("Reranker loaded", flush=True)
+
         context_evaluator = ContextEvaluator()
 
         models_ready = True
         model_error = None
 
-        print("MedAssist pipeline READY")
+        print("=== MEDASSIST PIPELINE READY ===", flush=True)
 
     except Exception as error:
         model_error = str(error)
-        print("MODEL INITIALIZATION ERROR:", error)
+        print("=== MODEL INITIALIZATION FAILED ===", flush=True)
+        import traceback
+        traceback.print_exc()
 
     finally:
         model_loading = False
