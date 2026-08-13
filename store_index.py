@@ -1,3 +1,4 @@
+# Created the Pinecone Index and stored Embeddings
 from src.helper import load_pdf, text_split, download_huggingface_embeddings
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore

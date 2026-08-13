@@ -1,3 +1,11 @@
+## MedAssist-Medical information copilot
+Evidence Aware Medical infomaation co-pilot built to provide grounded Medical information.
+It Retrieves information from The Medical book and displays a Evidence trace which  shows the user how was the response supported. 
+<img width="1727" height="872" alt="image" src="https://github.com/user-attachments/assets/643ca472-b7f3-4d86-98af-da9021e43c7c" />
+## Evidence Trace 
+<img width="588" height="563" alt="image" src="https://github.com/user-attachments/assets/48a17611-a535-4ef9-bf80-6e246909d319" />
+
+
 ##  Architecture
 
 ### One time process 
@@ -14,7 +22,7 @@
                               │
                               ▼
                         Generate Embeddings
-                        (HuggingFace)
+                        (dimensions = 384)
                               │
                               ▼
                         Store in Pinecone Index
@@ -73,21 +81,21 @@
                       |----------------------------->  Final Response + Evidence Trace
 ```
 ## Technology used & other specifications
-### Knowledge Base -  The Gale Encyclopedia of Medicine (Second Edition) -637 pages 
-### Gemini Model - gemini-3-flash-preview
-### Vector DataBase - PineCone 
-### similarity metric cosine similairty
-### Embedding model - sentence-transformers/all-MiniLM-L6-v2
-### cross encoder used - cross-encoder/ms-marco-MiniLM-L6-v2
-## Evidence Trace 
-<img width="588" height="563" alt="image" src="https://github.com/user-attachments/assets/48a17611-a535-4ef9-bf80-6e246909d319" />
-### key features
-#### Reduced the total pipeline lantency by 51.6% benchmarked against 100 queries.
+#### Knowledge Base -  The Gale Encyclopedia of Medicine (Second Edition) -637 pages 
+#### LLM - gemini-3-flash-preview
+### Vector Database - PineCone 
+#### Similarity metric cosine similairty
+#### Embedding model - sentence-transformers/all-MiniLM-L6-v2
+#### Cross Encoder used - cross-encoder/ms-marco-MiniLM-L6-v2
 
-## Components 
-Query Router- specifiess three intenest conversation, high risk, medical   CONVERSATION
-MEDICAL
-HIGH_RISK
+
+
+## Key features
+#### Provides an evidence trace for every generated response, enabling users to verify the supporting medical evidence and improving transparency and trust.
+#### Reduced end-to-end pipeline latency by 51.6% compared to a baseline RAG pipeline, validated on a 100-query benchmark.
+#### Domain-agnostic architecture that can be adapted to any knowledge base by generating embeddings for the new corpus and indexing them in a vector database, without requiring changes to the core pipeline.
+
+
 ##  YouTube Demo
 
  **Demo Video:** https://youtu.be/1YD7Zs4BcCA
