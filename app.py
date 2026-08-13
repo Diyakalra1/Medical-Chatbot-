@@ -181,3 +181,6 @@ start_model_warmup()
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
+
+# Debug = True is used to get detialed stack traces and debug support during the development
+# use_reloader is set false to ensure ML pipeline is initialised only once, the reloader may start background threads for reloading the embeddings re ranker models which could lead to heavy memeory usage and intialisation of the ML pipleline twice 
