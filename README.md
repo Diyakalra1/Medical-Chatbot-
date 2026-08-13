@@ -4,7 +4,20 @@ It Retrieves information from The Medical book and displays a Evidence trace whi
 <img width="1727" height="872" alt="image" src="https://github.com/user-attachments/assets/643ca472-b7f3-4d86-98af-da9021e43c7c" />
 ## Evidence Trace 
 <img width="588" height="563" alt="image" src="https://github.com/user-attachments/assets/48a17611-a535-4ef9-bf80-6e246909d319" />
-
+ FRONTEND FLOW
+// =========================================================
+// 1. User opens '/' - Flask renders chat.html
+// 2. User submits a medical query
+// 3. JavaScript prevents page reload
+// 4. Query is sent to '/get' using fetch()
+// 5. Flask executes retrieve_answers()
+// 6. Backend runs: Router -> Retrieval -> Reranking
+//    -> Context Evaluation -> Gemini Generation
+// 7. Backend returns JSON containing:
+//      { answer, trace }
+// 8. Frontend displays the grounded response and the
+//    complete evidence trace for transparency
+// =========================================================
 
 ##  Architecture
 
